@@ -34,8 +34,6 @@ exports.dialogflowWebhook = functions.https.onRequest(
   async (request, response) => {
     const agent = new WebhookClient({ request, response });
 
-    console.log(request.body);
-
     var session = request.body.session;
     var userID = session.substring(session.lastIndexOf("/") + 1);
 
@@ -49,13 +47,7 @@ exports.dialogflowWebhook = functions.https.onRequest(
 
     const result = request.body.queryResult;
 
-    // console.log(plans);
-
     function findNearbyRestaurantsHandler(agent) {
-      // var payload;
-
-      console.log("UserID: " + userID);
-
       const request = require("request-promise-native");
 
       const url =
@@ -63,8 +55,6 @@ exports.dialogflowWebhook = functions.https.onRequest(
 
       return request.get(url).then((jsonBody) => {
         var body = JSON.parse(jsonBody);
-
-        console.log(body);
 
         var venues = body;
         if (body.length > 4) {
@@ -75,62 +65,17 @@ exports.dialogflowWebhook = functions.https.onRequest(
           return item.placeID;
         });
 
-        console.log(venueIds);
-
         payload = {
           venues: venueIds,
           text: "Here are some restaurants!",
         };
         return agent.add(JSON.stringify(payload));
-
-        // agent.add(JSON.stringify(payload));
-        // return Promise.resolve(agent);
       });
-
-      // await getRecommended(userID, (data) => {
-      //   console.log(data);
-
-      //   const payload = {
-      //     venues: ["sushidamo", "hillcountrybbq", "bluesmoke"],
-      //     text: "Here are some restaurants!",
-      //   };
-
-      //   agent.add(JSON.stringify(payload));
-      // });
-
-      // await getRecommended(userID, (data) => {
-      //   var venues = data;
-      //   if (data.length > 4) {
-      //     venues = data.splice(0, 3);
-      //   }
-
-      //   var venueIds = venues.map((item) => {
-      //     return item.placeID;
-      //   });
-
-      //   payload = {
-      //     venues: venueIds,
-      //     text: "Here are some restaurants!",
-      //   };
-      //   agent.add(JSON.stringify(payload));
-      // });
-    }
-
-    async function userOnboardingHandler(agent) {
-      // Do backend stuff here
-      //   const db = admin.firestore();
-      //   const profile = db.collection("users").doc("hayden");
-
-      const { name, color } = result.parameters;
-
-      //   await profile.set({ name, color });
-      agent.add(`Welcome aboard my friend!`);
     }
 
     let intentMap = new Map();
     // intentMap.set("Default Welcome Intent", welcome);
     // intentMap.set("Default Fallback Intent", fallback);
-    // intentMap.set("UserOnboarding", userOnboardingHandler);
     intentMap.set("FindRestaurants", findNearbyRestaurantsHandler);
     agent.handleRequest(intentMap);
   }
