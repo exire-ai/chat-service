@@ -20,17 +20,24 @@ exports.dialogflowGateway = functions.https.onRequest((request, response) => {
     const responses = await sessionClient.detectIntent({ session, queryInput });
 
     const result = responses[0].queryResult;
-    console.log(result);
+    // console.log(result);
 
     response.send(result);
   });
 });
 
 const { WebhookClient, Payload } = require("dialogflow-fulfillment");
+// const plans = require("./recommendation");
+const fetch = require("node-fetch");
 
 exports.dialogflowWebhook = functions.https.onRequest(
   async (request, response) => {
     const agent = new WebhookClient({ request, response });
+
+    console.log(request.body);
+
+    var session = request.body.session;
+    var userID = session.substring(session.lastIndexOf("/") + 1);
 
     function welcome(agent) {
       agent.add("Welcome to my agent!");
@@ -42,37 +49,71 @@ exports.dialogflowWebhook = functions.https.onRequest(
 
     const result = request.body.queryResult;
 
+    // console.log(plans);
+
     function findNearbyRestaurantsHandler(agent) {
-      const payload = {
-        venues: ["nomwahnolita", "hillcountrybbq", "sushidamo"],
-        text: "Here are some restaurants!",
-      };
+      // var payload;
 
-      agent.add(JSON.stringify(payload));
+      console.log("UserID: " + userID);
 
-      const payload1 = new Payload("PLATFORM_UNSPECIFIED", payload, {
-        rawPayload: true,
-        sendAsMessage: true,
+      const request = require("request-promise-native");
+
+      const url =
+        "https://exire-backend.herokuapp.com/plans/getRecommended/" + userID;
+
+      return request.get(url).then((jsonBody) => {
+        var body = JSON.parse(jsonBody);
+
+        console.log(body);
+
+        var venues = body;
+        if (body.length > 4) {
+          venues = body.splice(0, 3);
+        }
+
+        var venueIds = venues.map((item) => {
+          return item.placeID;
+        });
+
+        console.log(venueIds);
+
+        payload = {
+          venues: venueIds,
+          text: "Here are some restaurants!",
+        };
+        return agent.add(JSON.stringify(payload));
+
+        // agent.add(JSON.stringify(payload));
+        // return Promise.resolve(agent);
       });
 
-      //   const payload2 = new Payload("PLATFORM_UNSPECIFIED", payload, {
-      //     rawPayload: false,
-      //     sendAsMessage: true,
+      // await getRecommended(userID, (data) => {
+      //   console.log(data);
+
+      //   const payload = {
+      //     venues: ["sushidamo", "hillcountrybbq", "bluesmoke"],
+      //     text: "Here are some restaurants!",
+      //   };
+
+      //   agent.add(JSON.stringify(payload));
+      // });
+
+      // await getRecommended(userID, (data) => {
+      //   var venues = data;
+      //   if (data.length > 4) {
+      //     venues = data.splice(0, 3);
+      //   }
+
+      //   var venueIds = venues.map((item) => {
+      //     return item.placeID;
       //   });
 
-      //   console.log("Payload 1: " + JSON.stringify(payload1));
-      //   console.log("Payload 2: " + JSON.stringify(payload2));
-      //   console.log("Payload 3: " + JSON.stringify(payload3));
-
-      //   agent.addPayloadResponse
-
-      //   agent.add(
-      //     new Payload("PLATFORM_UNSPECIFIED", payload, {
-      //       rawPayload: true,
-      //       sendAsMessage: true,
-      //     })
-      //   );
-      //   agent.add("Here are some restaurants!");
+      //   payload = {
+      //     venues: venueIds,
+      //     text: "Here are some restaurants!",
+      //   };
+      //   agent.add(JSON.stringify(payload));
+      // });
     }
 
     async function userOnboardingHandler(agent) {
@@ -94,3 +135,19 @@ exports.dialogflowWebhook = functions.https.onRequest(
     agent.handleRequest(intentMap);
   }
 );
+
+getRecommended = function (userID, callback) {
+  fetch("https://exire-backend.herokuapp.com/plans/getRecommended/" + userID, {
+    method: "GET",
+  })
+    .then((response) => response.json())
+    .then((responseJson) => {
+      callback(responseJson);
+      return true;
+    })
+    .catch((error) => {
+      console.log(JSON.stringify(error));
+      callback([]);
+      return false;
+    });
+};
