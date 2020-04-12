@@ -47,12 +47,40 @@ exports.dialogflowWebhook = functions.https.onRequest(
 
     const result = request.body.queryResult;
 
+    //Find general recommondations
+    function generalRecommended(agent) {
+      const request = require("request-promise-native");
+
+      const url =
+        "https://exire-backend.herokuapp.com/plans/getRecommended/" + userID;
+
+      return request.get(url).then((jsonBody) => {
+        var body = JSON.parse(jsonBody);
+
+        var venues = body;
+        if (body.length > 4) {
+          venues = body.splice(0, 3);
+        }
+
+        var venueIds = venues.map((item) => {
+          return item.placeID;
+        });
+
+        payload = {
+          venues: venueIds,
+          text: "Here are some things I think you'd like!",
+        };
+        return agent.add(JSON.stringify(payload));
+      });
+    }
+
     //Find nearby restaurants
     function findNearbyRestaurantsHandler(agent) {
       const request = require("request-promise-native");
 
       const url =
-        "https://exire-backend.herokuapp.com/plans/getRecommended/" + userID;
+        "https://exire-backend.herokuapp.com/plans/getFoodRecommended/" +
+        userID;
 
       return request.get(url).then((jsonBody) => {
         var body = JSON.parse(jsonBody);
@@ -74,26 +102,40 @@ exports.dialogflowWebhook = functions.https.onRequest(
       });
     }
 
+    //Find nearby activities
+    function activityRecommendations(agent) {
+      const request = require("request-promise-native");
+
+      const url =
+        "https://exire-backend.herokuapp.com/plans/getActivityRecommended/" +
+        userID;
+
+      return request.get(url).then((jsonBody) => {
+        var body = JSON.parse(jsonBody);
+
+        var venues = body;
+        if (body.length > 4) {
+          venues = body.splice(0, 3);
+        }
+
+        var venueIds = venues.map((item) => {
+          return item.placeID;
+        });
+
+        payload = {
+          venues: venueIds,
+          text: "Here are some activites!",
+        };
+        return agent.add(JSON.stringify(payload));
+      });
+    }
+
     let intentMap = new Map();
     // intentMap.set("Default Welcome Intent", welcome);
     // intentMap.set("Default Fallback Intent", fallback);
+    intentMap.set("GeneralRecommendations", generalRecommended);
     intentMap.set("FindRestaurants", findNearbyRestaurantsHandler);
+    intentMap.set("ActivityRecommendations", activityRecommendations);
     agent.handleRequest(intentMap);
   }
 );
-
-getRecommended = function (userID, callback) {
-  fetch("https://exire-backend.herokuapp.com/plans/getRecommended/" + userID, {
-    method: "GET",
-  })
-    .then((response) => response.json())
-    .then((responseJson) => {
-      callback(responseJson);
-      return true;
-    })
-    .catch((error) => {
-      console.log(JSON.stringify(error));
-      callback([]);
-      return false;
-    });
-};
