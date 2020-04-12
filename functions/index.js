@@ -47,6 +47,7 @@ exports.dialogflowWebhook = functions.https.onRequest(
 
     const result = request.body.queryResult;
 
+    //Find nearby restaurants
     function findNearbyRestaurantsHandler(agent) {
       const request = require("request-promise-native");
 
