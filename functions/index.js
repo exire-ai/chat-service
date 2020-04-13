@@ -57,12 +57,7 @@ exports.dialogflowWebhook = functions.https.onRequest(
       return request.get(url).then((jsonBody) => {
         var body = JSON.parse(jsonBody);
 
-        var venues = body;
-        if (body.length > 4) {
-          venues = body.splice(0, 3);
-        }
-
-        var venueIds = venues.map((item) => {
+        var venueIds = body.map((item) => {
           return item.placeID;
         });
 
@@ -85,12 +80,7 @@ exports.dialogflowWebhook = functions.https.onRequest(
       return request.get(url).then((jsonBody) => {
         var body = JSON.parse(jsonBody);
 
-        var venues = body;
-        if (body.length > 4) {
-          venues = body.splice(0, 3);
-        }
-
-        var venueIds = venues.map((item) => {
+        var venueIds = body.map((item) => {
           return item.placeID;
         });
 
@@ -113,12 +103,7 @@ exports.dialogflowWebhook = functions.https.onRequest(
       return request.get(url).then((jsonBody) => {
         var body = JSON.parse(jsonBody);
 
-        var venues = body;
-        if (body.length > 4) {
-          venues = body.splice(0, 3);
-        }
-
-        var venueIds = venues.map((item) => {
+        var venueIds = body.map((item) => {
           return item.placeID;
         });
 
