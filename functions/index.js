@@ -16,11 +16,8 @@ exports.dialogflowGateway = functions.https.onRequest((request, response) => {
 
     const sessionClient = new SessionsClient({ credentials: serviceAccount });
     const session = sessionClient.sessionPath("exiretest-kwrrpc", sessionId);
-
     const responses = await sessionClient.detectIntent({ session, queryInput });
-
     const result = responses[0].queryResult;
-    // console.log(result);
 
     response.send(result);
   });
