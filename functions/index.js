@@ -117,14 +117,12 @@ exports.dialogflowWebhook = functions.https.onRequest(
       const request = require("request-promise-native");
 
       const url =
-        "https://exire-backend.herokuapp.com/plans/getRecommendationGroup"
+        "https://exire-backend.herokuapp.com/plans/getRecommendedGroup"
 
-      return request.post(url, { 'body' : {users: users}, 'headers' : {'Content-type' : 'application/json'}}).then((jsonBody) => {
+      return request.post({url : url, body : {users: users}, headers : {'Content-type' : 'application/json'}}).then((jsonBody) => {
         var body = JSON.parse(jsonBody);
 
-        var venueIds = body.recommended.map((item) => {
-          return item.placeID;
-        });
+        var venueIds = body.recommended.map(item => item.placeID);
 
         payload = {
           venues: venueIds,
