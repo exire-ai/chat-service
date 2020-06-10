@@ -32,7 +32,8 @@ exports.dialogflowWebhook = functions.https.onRequest(
     const agent = new WebhookClient({ request, response });
 
     var session = request.body.session;
-    var userID = session.substring(session.lastIndexOf("/") + 1);
+    var userID = request.body.userID;
+    var users = request.body.users;
 
     function welcome(agent) {
       agent.add("Welcome to my agent!");
@@ -112,12 +113,34 @@ exports.dialogflowWebhook = functions.https.onRequest(
       });
     }
 
+    function groupRecommendations(agent) {
+      const request = require("request-promise-native");
+
+      const url =
+        "https://exire-backend.herokuapp.com/plans/getRecommendationGroup"
+
+      return request.post(url, { 'body' : {users: users}, 'headers' : {'Content-type' : 'application/json'}}).then((jsonBody) => {
+        var body = JSON.parse(jsonBody);
+
+        var venueIds = body.recommended.map((item) => {
+          return item.placeID;
+        });
+
+        payload = {
+          venues: venueIds,
+          text: "Here are some things you'll all like!",
+        };
+        return agent.add(JSON.stringify(payload));
+      });
+    }
+
     let intentMap = new Map();
     // intentMap.set("Default Welcome Intent", welcome);
     // intentMap.set("Default Fallback Intent", fallback);
     intentMap.set("GeneralRecommendations", generalRecommended);
     intentMap.set("FindRestaurants", findNearbyRestaurantsHandler);
     intentMap.set("ActivityRecommendations", activityRecommendations);
+    intentMap.set("GroupRecommendations", groupRecommendations);
     agent.handleRequest(intentMap);
   }
 );
