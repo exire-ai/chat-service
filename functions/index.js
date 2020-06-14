@@ -130,23 +130,57 @@ exports.dialogflowWebhook = functions.https.onRequest(
       });
     }
 
-    function groupRecommendations(agent) {
+    function specificRecommendations(agent) {
+      // const request = require("request-promise");
       const request = require("request-promise-native");
 
-      const url =
-        "https://exire-backend.herokuapp.com/plans/getRecommendedGroup"
+      var url =
+        "https://exire-backend.herokuapp.com/plans/getByCategoryList/"
 
-      return request.post({url : url, body : {users: users}, headers : {'Content-type' : 'application/json'}}).then((jsonBody) => {
+      var categories = agent.parameters.categories.join(',')
+      url = url.concat(categories);
+      return request.get(url).then((jsonBody) => {
         var body = JSON.parse(jsonBody);
 
-        var venueIds = body.recommended.map(item => item.placeID);
+        var venueIds = body.map((item) => {
+          return item.placeID;
+        })
+
+        if (venueIds.length >= 6) {
+          venueIds = venueIds.slice(0, 5)
+        }
+
+        var text = ["Here are some places I love!", "Let me know if any of these interest you!", "Here are some places you might like!"]
 
         payload = {
           venues: venueIds,
-          text: "Here are some things you'll all like!",
-        };
-        return agent.add(JSON.stringify(payload));
-      });
+          text:  text[Math.floor(Math.random() * text.length)]
+        }
+        return agent.add(JSON.stringify(payload))
+      })
+      // return request.post({url : url, body : {categories: categories}, headers : {'Content-type' : 'application/json'}}).then((jsonBody) => {
+      //   var body = JSON.parse(jsonBody);
+      //
+      //   var venueIds = body.map(item => item.placeID);
+      //
+      //   payload = {
+      //     venues: venueIds,
+      //     text: agent.fulfillmentText,
+      //   };
+      //   return agent.add(JSON.stringify(payload));
+      // });
+      // return rp({
+      //   method: 'POST',
+      //   uri: 'https://exire-backend.herokuapp.com/plans/getByCategoryList',
+      //   body: {
+      //     categories: categories
+      //   },
+      //   json: true
+      // }).then(function(parsedBody) {
+      //
+      // }).catch(function(err) {
+      //
+      // })
     }
 
     let intentMap = new Map();
@@ -155,7 +189,7 @@ exports.dialogflowWebhook = functions.https.onRequest(
     intentMap.set("GeneralRecommendations", generalRecommended);
     intentMap.set("FindRestaurants", findNearbyRestaurantsHandler);
     intentMap.set("ActivityRecommendations", activityRecommendations);
-    intentMap.set("GroupRecommendations", groupRecommendations);
+    intentMap.set("SpecificRecommendations", specificRecommendations);
     agent.handleRequest(intentMap);
   }
 );
