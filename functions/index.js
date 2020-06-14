@@ -32,8 +32,13 @@ exports.dialogflowWebhook = functions.https.onRequest(
     const agent = new WebhookClient({ request, response });
 
     var session = request.body.session;
-    var userID = request.body.userID;
-    var users = request.body.users;
+    var userID = "temp"
+    if (session.includes('%')) {
+      temp = session.split('%')
+      if (temp.length === 2) {
+        userID = temp[1]
+      }
+    }
 
     function welcome(agent) {
       agent.add("Welcome to my agent!");
@@ -59,6 +64,10 @@ exports.dialogflowWebhook = functions.https.onRequest(
           return item.placeID;
         });
 
+        if (venueIds.length >= 6) {
+          venueIds = venueIds.slice(0, 5)
+        }
+
         payload = {
           venues: venueIds,
           text: "Here are some things I think you'd like!",
@@ -82,6 +91,10 @@ exports.dialogflowWebhook = functions.https.onRequest(
           return item.placeID;
         });
 
+        if (venueIds.length >= 6) {
+          venueIds = venueIds.slice(0, 5)
+        }
+
         payload = {
           venues: venueIds,
           text: "Here are some restaurants!",
@@ -104,6 +117,10 @@ exports.dialogflowWebhook = functions.https.onRequest(
         var venueIds = body.map((item) => {
           return item.placeID;
         });
+
+        if (venueIds.length >= 6) {
+          venueIds = venueIds.slice(0, 5)
+        }
 
         payload = {
           venues: venueIds,
