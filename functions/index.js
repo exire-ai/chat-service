@@ -154,7 +154,8 @@ exports.dialogflowWebhook = functions.https.onRequest(
 
         payload = {
           venues: venueIds,
-          text:  text[Math.floor(Math.random() * text.length)]
+          text:  text[Math.floor(Math.random() * text.length)],
+          categories: categories
         }
         return agent.add(JSON.stringify(payload))
       })
