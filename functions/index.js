@@ -146,10 +146,6 @@ exports.dialogflowWebhook = functions.https.onRequest(
           return item.placeID;
         })
 
-        if (venueIds.length >= 6) {
-          venueIds = venueIds.slice(0, 5)
-        }
-
         var text = ["Here are some places I love!", "Let me know if any of these interest you!", "Here are some places you might like!"]
 
         payload = {
